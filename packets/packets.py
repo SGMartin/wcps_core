@@ -34,19 +34,27 @@ class OutPacket:
         self.blocks = [self.ticks, self.packet_id]
         self.xor_key = xor_key
 
-    def append(self, value):
 
+    def value_to_block(self, value) -> str:
         if isinstance(value, bool):
-            value_to_append = 1 if value else 0
+            value_to_append = "1" if value else "0"
         elif isinstance(value, str):
             value_to_append = data.replace(" ", chr(0x1D))
         else:
-            value_to_append = value
-        
-        self.blocks.append(value_to_append)
+            value_to_append = str(value)
+
+        return value_to_append
+
+
+    def append(self, value) -> None:
+        transcoded = self.value_to_block(value)
+        self.blocks.append(transcoded)
+
 
     def fill(self, value, times:int) -> None:
+        transcoded = self.value_to_block(value)
         self.blocks.extend([value] * times)
+
 
     def xor_encrypt(self, packet:str) -> bytearray:
         buffer = bytearray(packet)
@@ -59,7 +67,7 @@ class OutPacket:
     def build(self, encrypted: bool = True) -> bytearray | bytes:
         # End of packet termination chr.
         self.blocks.append(chr(0x0A)) 
-        full_packet = " ".join(str(block) for block in self.blocks)
+        full_packet = " ".join(self.blocks)
         full_packet = full_packet.encode("utf-8")
 
         if encrypted:
