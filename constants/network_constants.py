@@ -1,6 +1,6 @@
 class InternalKeys:
-    XOR_SEND = 0x23
-    XOR_RECIEVE = 0xA3
+    XOR_AUTH_SEND = 0x23
+    XOR_GAME_SEND = 0xA3
 
 
 class Ports:

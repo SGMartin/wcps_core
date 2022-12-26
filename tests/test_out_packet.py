@@ -28,7 +28,8 @@ class TestOutPacket(unittest.TestCase):
 
     def test_xor_encrypt(self):
         encrypted = self.packet.xor_encrypt("hello world".encode("utf-8"))
-        self.assertEqual(encrypted, b'KFOOL\x03TLQOG')
+        print(encrypted)
+        self.assertEqual(encrypted, b'\xcb\xc6\xcf\xcf\xcc\x83\xd4\xcc\xd1\xcf\xc7')
 
     def test_build(self):
         self.packet = OutPacket(packet_id=123)

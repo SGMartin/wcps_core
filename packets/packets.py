@@ -3,7 +3,7 @@ import time
 from wcps_core.constants import InternalKeys
 
 class InPacket:
-    def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_RECIEVE):
+    def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_AUTH_SEND):
         self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
         self.blocks = self.decoded_buffer.split(" ")
         self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
@@ -29,7 +29,7 @@ class InPacket:
 
 
 class OutPacket:
-    def __init__(self, packet_id: int, xor_key: int = InternalKeys.XOR_SEND):
+    def __init__(self, packet_id: int, xor_key: int = InternalKeys.XOR_GAME_SEND):
         self.packet_id = packet_id
         self.ticks = int(time.time())
         self.blocks = [str(self.ticks), str(self.packet_id)]
@@ -60,7 +60,7 @@ class OutPacket:
     def xor_encrypt(self, packet:str) -> bytearray:
         buffer = bytearray(packet)
         for i in range(len(buffer)):
-            buffer[i] = buffer[i] ^ self.xor_key 
+            buffer[i] = buffer[i] ^ self.xor_key
         
         return buffer
 
