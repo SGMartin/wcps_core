@@ -1,6 +1,6 @@
 import time 
 
-from constants import InternalKeys
+from wcps_core.constants import InternalKeys
 
 class InPacket:
     def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_RECIEVE):
