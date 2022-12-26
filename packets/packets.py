@@ -19,7 +19,7 @@ class InPacket:
 
     def xor_decrypt(self, packet_buffer: bytearray, xor_key: int) -> str:
         # Decrypt the bytes with the xOrKey.
-        this_buffer = packet_buffer
+        this_buffer = bytearray(packet_buffer)
         for i in range(len(this_buffer)):
             this_buffer[i] = this_buffer[i] ^ xor_key
 
