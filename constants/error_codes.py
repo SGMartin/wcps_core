@@ -1,6 +1,4 @@
-from enum import Enum 
-
-class ErrorCodes(Enum):
+class ErrorCodes:
     SUCCESS = 1
     UPDATE = 2
     END_CONNECTION = 3
