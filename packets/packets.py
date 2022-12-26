@@ -19,11 +19,12 @@ class InPacket:
 
     def xor_decrypt(self, packet_buffer: bytearray, xor_key: int) -> str:
         # Decrypt the bytes with the xOrKey.
-        for i in range(len(packet_buffer)):
-            packet_buffer[i] = packet_buffer[i] ^ xor_key
+        this_buffer = packet_buffer
+        for i in range(len(this_buffer)):
+            this_buffer[i] = this_buffer[i] ^ xor_key
 
         # Return the decrypted packet
-        decoded_buffer = packet_buffer.decode("utf-8")
+        decoded_buffer = this_buffer.decode("utf-8")
         return decoded_buffer
 
 
@@ -31,7 +32,7 @@ class OutPacket:
     def __init__(self, packet_id: int, xor_key: int = InternalKeys.XOR_SEND):
         self.packet_id = packet_id
         self.ticks = int(time.time())
-        self.blocks = [self.ticks, self.packet_id]
+        self.blocks = [str(self.ticks), str(self.packet_id)]
         self.xor_key = xor_key
 
 
@@ -39,7 +40,7 @@ class OutPacket:
         if isinstance(value, bool):
             value_to_append = "1" if value else "0"
         elif isinstance(value, str):
-            value_to_append = data.replace(" ", chr(0x1D))
+            value_to_append = value.replace(" ", chr(0x1D))
         else:
             value_to_append = str(value)
 
@@ -53,7 +54,7 @@ class OutPacket:
 
     def fill(self, value, times:int) -> None:
         transcoded = self.value_to_block(value)
-        self.blocks.extend([value] * times)
+        self.blocks.extend([transcoded] * times)
 
 
     def xor_encrypt(self, packet:str) -> bytearray:
@@ -65,9 +66,9 @@ class OutPacket:
 
 
     def build(self, encrypted: bool = True) -> bytearray | bytes:
-        # End of packet termination chr.
-        self.blocks.append(chr(0x0A)) 
         full_packet = " ".join(self.blocks)
+        # End of packet character
+        full_packet += chr(0xA) 
         full_packet = full_packet.encode("utf-8")
 
         if encrypted:
