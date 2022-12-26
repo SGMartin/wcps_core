@@ -1,14 +1,14 @@
 from enum import Enum 
 
 class InternalKeys(Enum):
-    xOrKeyInternalSend = 0x23
-    xOrKeyInternalRecieve = 0xA3
+    XOR_SEND = 0x23
+    XOR_RECIEVE = 0xA3
 
 
 class Ports(Enum):
-    internal = 5012
-    authClient = 5330,
-    gameClient = 5340,
-    peerUDP1 = 5350,
-    peerUDP2 = 5351
+    INTERNAL = 5012
+    AUTH_CLIENT = 5330,
+    GAME_CLIENT = 5340,
+    UDP1 = 5350,
+    UDP2 = 5351
 
