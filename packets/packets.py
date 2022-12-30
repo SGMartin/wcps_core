@@ -7,7 +7,7 @@ class InPacket:
         self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
         self.blocks = self.decoded_buffer.split(" ")
         self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
-        self.blocks = self.blocks[2:]
+        self.blocks = [block.rstrip() for block in self.blocks[2:]]
 
     def parse_packet_header(self, blocks: list) -> tuple:
         header = (blocks[0], blocks[1])
