@@ -1,7 +1,8 @@
 import random
-import time 
+import time
 
 from wcps_core.constants import InternalKeys
+
 
 class PacketList:
     GameServerStatus = 0x1100
@@ -41,7 +42,6 @@ class OutPacket:
         self.blocks = [str(self.ticks), str(self.packet_id)]
         self.xor_key = xor_key
 
-
     def value_to_block(self, value) -> str:
         if isinstance(value, bool):
             value_to_append = "1" if value else "0"
@@ -52,29 +52,25 @@ class OutPacket:
 
         return value_to_append
 
-
     def append(self, value) -> None:
         transcoded = self.value_to_block(value)
         self.blocks.append(transcoded)
 
-
-    def fill(self, value, times:int) -> None:
+    def fill(self, value, times: int) -> None:
         transcoded = self.value_to_block(value)
         self.blocks.extend([transcoded] * times)
 
-
-    def xor_encrypt(self, packet:str) -> bytearray:
+    def xor_encrypt(self, packet: str) -> bytearray:
         buffer = bytearray(packet)
         for i in range(len(buffer)):
             buffer[i] = buffer[i] ^ self.xor_key
-        
-        return buffer
 
+        return buffer
 
     def build(self, encrypted: bool = True) -> bytearray | bytes:
         full_packet = " ".join(self.blocks)
         # End of packet character
-        full_packet += chr(0xA) 
+        full_packet += chr(0xA)
         full_packet = full_packet.encode("utf-8")
 
         if encrypted:
@@ -83,10 +79,9 @@ class OutPacket:
         return full_packet
 
 
-
 class Connection(OutPacket):
     def __init__(self, xor_key):
         super().__init__(packet_id=PacketList.ClientConnection, xor_key=xor_key)
-    
+
     self.append(random.randint(111111111, 999999999))
     self.append(77)
