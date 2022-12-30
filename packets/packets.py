@@ -1,6 +1,12 @@
+import random
 import time 
 
 from wcps_core.constants import InternalKeys
+
+class PacketList:
+    GameServerStatus = 0x1100
+    ClientConnection = 0x1200
+
 
 class InPacket:
     def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_AUTH_SEND):
@@ -75,3 +81,12 @@ class OutPacket:
             full_packet = self.xor_encrypt(packet=full_packet)
 
         return full_packet
+
+
+
+class Connection(OutPacket):
+    def __init__(self, xor_key):
+        super().__init__(packet_id=PacketList.ClientConnection, xor_key=xor_key)
+    
+    self.append(random.randint(111111111, 999999999))
+    self.append(77)
