@@ -82,6 +82,5 @@ class OutPacket:
 class Connection(OutPacket):
     def __init__(self, xor_key):
         super().__init__(packet_id=PacketList.ClientConnection, xor_key=xor_key)
-
-    self.append(random.randint(111111111, 999999999))
-    self.append(77)
+        self.append(random.randint(111111111, 999999999))
+        self.append(77)
