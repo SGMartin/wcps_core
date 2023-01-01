@@ -11,10 +11,16 @@ class PacketList:
 
 class InPacket:
     def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_AUTH_SEND):
-        self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
-        self.blocks = self.decoded_buffer.split(" ")
-        self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
-        self.blocks = [block.rstrip() for block in self.blocks[2:]]
+        try:
+            self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
+        except Exception as e:
+            print(f"Error decrypting packet: {e}")
+            self.decoded_buffer = None
+
+        if self.decoded_buffer is not None:
+            self.blocks = self.decoded_buffer.split(" ")
+            self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
+            self.blocks = [block.rstrip() for block in self.blocks[2:]]
 
     def parse_packet_header(self, blocks: list) -> tuple:
         header = (blocks[0], blocks[1])
