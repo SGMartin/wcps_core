@@ -10,7 +10,7 @@ class PacketList:
 
 
 class InPacket:
-    def __init__(self, buffer: bytearray, xor_key: int = InternalKeys.XOR_AUTH_SEND):
+    def __init__(self, buffer: bytearray, receptor:object, xor_key: int = InternalKeys.XOR_AUTH_SEND):
         try:
             self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
         except Exception as e:
@@ -21,6 +21,8 @@ class InPacket:
             self.blocks = self.decoded_buffer.split(" ")
             self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
             self.blocks = [block.rstrip() for block in self.blocks[2:]]
+            # This is a reference to the object whose listen() caught the packet
+            self.receptor = receptor
 
     def parse_packet_header(self, blocks: list) -> tuple:
         header = (blocks[0], blocks[1])
