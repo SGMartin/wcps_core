@@ -5,8 +5,10 @@ from wcps_core.constants import InternalKeys
 
 
 class PacketList:
+    GameServerAuthentication = 0x1000
     GameServerStatus = 0x1100
     ClientConnection = 0x1200
+    ClientAuthentication = 0x1300
 
 
 class InPacket:
