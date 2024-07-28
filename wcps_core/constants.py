@@ -8,6 +8,7 @@ class ErrorCodes:
     ALREADY_AUTHORIZED = 0x120
     SERVER_LIMIT_REACHED = 0x130
     SERVER_NAME_USED = 0x140
+    SERVER_ERROR_OTHER = 0x150
 
 class UserRights:
     Blocked = 0
