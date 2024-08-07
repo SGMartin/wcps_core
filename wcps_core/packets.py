@@ -12,7 +12,12 @@ class PacketList:
 
 
 class InPacket:
-    def __init__(self, buffer: bytearray, receptor:object, xor_key: int = InternalKeys.XOR_AUTH_SEND):
+    def __init__(
+        self,
+        buffer: bytearray,
+        receptor: object,
+        xor_key: int = InternalKeys.XOR_AUTH_SEND
+    ):
         try:
             self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
         except Exception as e:
@@ -20,7 +25,8 @@ class InPacket:
             self.decoded_buffer = None
 
         if self.decoded_buffer is not None:
-            self.blocks = self.decoded_buffer.split(" ")
+            # TODO:  better UTF handling
+            self.blocks = self.decoded_buffer[2:].decode("utf-8", errors="ignore").split(" ")
             self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
             self.blocks = [block.rstrip() for block in self.blocks[2:]]
             # This is a reference to the object whose listen() caught the packet
@@ -41,8 +47,8 @@ class InPacket:
             this_buffer[i] = this_buffer[i] ^ xor_key
 
         # Return the decrypted packet
-        decoded_buffer = this_buffer.decode("utf-8")
-        return decoded_buffer
+        # decoded_buffer = this_buffer.decode("utf-8")
+        return this_buffer
 
 
 class OutPacket:
