@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import re
@@ -82,6 +83,55 @@ def parse_map_info(xml_string):
     return json.dumps(map_info, indent=4)
 
 
+def parse_map_settings_to_csv(input_json, mapper):
+    # Load JSON data from the string (or from a file if needed)
+    data = json.loads(input_json)
+
+    # Define the CSV file path
+    csv_file_path = "output/csv/maps.csv"
+
+    # Define the CSV columns
+    csv_columns = [
+        "map_id",
+        "map_name",
+        "cqc",
+        "uo",
+        "bg",
+        "explosive",
+        "deathmatch",
+        "conquest",
+        "ffa",
+        "premium",
+        "active"
+        ]
+
+    # Prepare the data for CSV writing
+    csv_data = []
+    for item in data:
+        row = {
+            "map_id": item["Identity"],
+            "map_name": mapper.get(item["Identity"], "unknown"),
+            "cqc": item["Channel"]["Mission"],
+            "uo": item["Channel"]["Medium"],
+            "bg": item["Channel"]["Large"],
+            "explosive": item["GameMode"]["Explosive"],
+            "deathmatch": item["GameMode"]["DeathMatch"],
+            "conquest": item["GameMode"]["Conquest"],
+            "ffa": item["GameMode"]["FFA"],
+            "premium": item["Restriction"],
+            "active": True
+        }
+        csv_data.append(row)
+
+    # Write the data to the CSV file
+    with open(csv_file_path, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=csv_columns)
+        writer.writeheader()
+        writer.writerows(csv_data)
+
+    print(f"Map settings saved to CSV: {csv_file_path}")
+
+
 def main(input_directory):
     with open(file=os.path.join(input_directory, "MapList.xml"), mode="r") as map_file:
         maps_xml_list = map_file.read()
@@ -98,6 +148,7 @@ def main(input_directory):
     map_dict = {map_folder.lower(): map_folder for map_folder in map_folders}
 
     all_map_settings = []
+    id_name_mapper = {}
     for listed_map in json.loads(map_list_json):
         this_map = listed_map["name"]
 
@@ -108,7 +159,8 @@ def main(input_directory):
             ) as map_data:
                 map_data_file = map_data.read()
                 map_data_json = parse_map_info(map_data_file)
-
+                map_id = json.loads(map_data_json)["Identity"]
+                id_name_mapper[map_id] = this_map.lower()
                 all_map_settings.append(json.loads(map_data_json))
 
     map_settings_file = "output/json/map_settings.json"
@@ -121,6 +173,9 @@ def main(input_directory):
         # Save the JSON data to a file
     with open(map_list_file, "w") as outfile:
         json.dump(json.loads(map_list_json), outfile, indent=4)
+
+    # Export to csv
+    parse_map_settings_to_csv(json.dumps(all_map_settings, indent=4), id_name_mapper)
 
 
 if __name__ == "__main__":
