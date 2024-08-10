@@ -58,3 +58,5 @@ target/
 tests/__pycache__/test_out_packet.cpython-311-pytest-7.2.0.pyc
 
 .vscode
+wcps_core/datafiles/input
+wcps_core/datafiles/output
