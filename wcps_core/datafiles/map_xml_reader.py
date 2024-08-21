@@ -83,6 +83,26 @@ def parse_map_info(xml_string):
     return json.dumps(map_info, indent=4)
 
 
+def parse_control_points(control_point_file_stream):
+    entities = control_point_file_stream.strip().split("\n\n")
+    team_dict = {0: [], 1: []}  # Initialize the dictionary for team 0 (DERB) and team 1 (NIU)
+    entity_count = len(entities)  # Count the number of entities
+
+    for idx, entity in enumerate(entities):
+        lines = entity.splitlines()
+        team = None
+        for line in lines:
+            if line.startswith("ControlPoint.Team"):
+                team = int(line.split()[-1])
+                break
+
+        # If team is not -1, add the entity ID to the dictionary
+        if team in team_dict:
+            team_dict[team].append(idx)
+
+    return entity_count, team_dict
+
+
 def parse_map_settings_to_csv(input_json, mapper):
     # Load JSON data from the string (or from a file if needed)
     data = json.loads(input_json)
@@ -102,12 +122,15 @@ def parse_map_settings_to_csv(input_json, mapper):
         "conquest",
         "ffa",
         "premium",
-        "active"
+        "active",
+        "flags",
+        "spawn_flags"
         ]
 
     # Prepare the data for CSV writing
     csv_data = []
     for item in data:
+        spawn_flags = ",".join([str(value[0]) for value in item["spawn_flags"].values()])
         row = {
             "map_id": item["Identity"],
             "map_name": mapper.get(item["Identity"], "unknown"),
@@ -119,7 +142,9 @@ def parse_map_settings_to_csv(input_json, mapper):
             "conquest": item["GameMode"]["Conquest"],
             "ffa": item["GameMode"]["FFA"],
             "premium": item["Restriction"],
-            "active": True
+            "active": True,
+            "flags": item["flags"],
+            "spawn_flags": spawn_flags
         }
         csv_data.append(row)
 
@@ -156,12 +181,20 @@ def main(input_directory):
             with open(
                 file=os.path.join(input_directory, map_dict[this_map.lower()], "MapInfo.xml"),
                 mode="r"
-            ) as map_data:
+            ) as map_data, open(file=os.path.join(input_directory, map_dict[this_map.lower()], "ControlPointTemplate.dat"), mode="r") as spawn_points:
                 map_data_file = map_data.read()
+                # Load main xml settings
                 map_data_json = parse_map_info(map_data_file)
-                map_id = json.loads(map_data_json)["Identity"]
+                map_data_json = json.loads(map_data_json)
+                # Load spawn settings
+                map_spawn_points = parse_control_points(spawn_points.read())
+                # Append them to map data
+                map_data_json["flags"] = map_spawn_points[0]
+                map_data_json["spawn_flags"] = map_spawn_points[1]
+                # Append to map settings
+                map_id = map_data_json["Identity"]
                 id_name_mapper[map_id] = this_map.lower()
-                all_map_settings.append(json.loads(map_data_json))
+                all_map_settings.append(map_data_json)
 
     map_settings_file = "output/json/map_settings.json"
     map_list_file = "output/json/map_list.json"
@@ -170,7 +203,7 @@ def main(input_directory):
     with open(map_settings_file, "w") as outfile:
         json.dump(all_map_settings, outfile, indent=4)
 
-        # Save the JSON data to a file
+    # Save the JSON data to a file
     with open(map_list_file, "w") as outfile:
         json.dump(json.loads(map_list_json), outfile, indent=4)
 
