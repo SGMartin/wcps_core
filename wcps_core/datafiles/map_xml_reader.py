@@ -202,6 +202,7 @@ def parse_vehicles_to_csv(data, filename):
             for vehicle_id, entry in nested_dict.items():
                 vehicle_code = entry.get("code", "")
                 coords = entry.get("coords", "")
+                coords = "/".join([str(coord) for coord in coords])
                 spawn_interval = entry.get("spawn_interval", "")
 
                 # Write the row to the CSV file
