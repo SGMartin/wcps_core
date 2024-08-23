@@ -123,10 +123,9 @@ def generate_vehicle_table(json_data, output_csv_file):
                 ability_info = vehicle.get("ABILITY_INFO", {})
                 vehicle_health = ability_info.get("DEFENCE", 0)
 
-                seats = vehicle.get("RIDING_INFO", {})
+                seats = vehicle.get("SEATS", [])
 
-                for seat in seats.values():
-                    print(seat)
+                for seat in seats:
                     seat_id = seat.get("SEAT_NUMBER", "")
                     weapon_code = seat.get("CODE", "")
                     weapon_ammo = seat.get("AMMONNUM", 0)

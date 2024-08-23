@@ -12,22 +12,19 @@ def parse_block(block):
     result = {}
     block = re.sub(r"<!--|//-->", "", block).strip()
     sections = re.findall(r"<(.*?)>(.*?)</\1>", block, re.DOTALL)
-
     for section, content in sections:
-        nested_sections = re.findall(r"<(.*?)>(.*?)</\1>", content.strip(), re.DOTALL)
-
-        if nested_sections:
-            # If there are nested sections, process them recursively
-            nested_result = {}
-            for nested_section, nested_content in nested_sections:
-                items = re.findall(r"(\w+)\s+=\s+(.*)", nested_content.strip())
-                nested_result[nested_section] = {key: value.strip() for key, value in items}
-            result[section] = nested_result
+        # Check if section is RIDING_INFO to handle nested blocks differently
+        if section == "RIDING_INFO":
+            seats = re.findall(r"<(.*?)>(.*?)</\1>", content, re.DOTALL)
+            result["SEATS"] = []
+            for seat_name, seat_content in seats:
+                items = re.findall(r"(\w+)\s+=\s+(.*)", seat_content.strip())
+                seat_data = {key: value.strip() for key, value in items}
+                seat_data["TYPE"] = seat_name
+                result["SEATS"].append(seat_data)
         else:
-            # No nested sections, process the current section
             items = re.findall(r"(\w+)\s+=\s+(.*)", content.strip())
             result[section] = {key: value.strip() for key, value in items}
-
     return result
 
 
@@ -44,6 +41,7 @@ def parse_item_data(file_path):
         "E_WEAPON": []
     }
 
+    # Process general item types
     for item_type in item_data.keys():
         start_tag = rf"\[{item_type}\]"
         end_tag = rf"\[/{item_type}\]"
@@ -63,6 +61,7 @@ def save_json(data, file_path):
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
+# Example usage
 file_path = "output/decoded/items.bin.decoded"
 parsed_data = parse_item_data(file_path)
 save_json(parsed_data, "item_data.json")
