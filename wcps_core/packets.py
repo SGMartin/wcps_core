@@ -11,26 +11,74 @@ class PacketList:
     ClientAuthentication = 0x1300
 
 
-class InPacket:
+class PacketBuffer:
     def __init__(
         self,
         buffer: bytearray,
         receptor: object,
         xor_key: int = InternalKeys.XOR_AUTH_SEND
     ):
+        self.packet_stack = []
         try:
             self.decoded_buffer = self.xor_decrypt(packet_buffer=buffer, xor_key=xor_key)
         except Exception as e:
-            print(f"Error decrypting packet: {e}")
+            print(f"Error decrypting packet buffer: {e}")
             self.decoded_buffer = None
 
         if self.decoded_buffer is not None:
-            # TODO:  better UTF handling
-            self.blocks = self.decoded_buffer[2:].decode("utf-8", errors="ignore").split(" ")
-            self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
-            self.blocks = [block.rstrip() for block in self.blocks[2:]]
-            # This is a reference to the object whose listen() caught the packet
-            self.receptor = receptor
+            raw_packets = self.find_packets(decoded_buffer=self.decoded_buffer)
+
+            # Attempt to generate actual packets from the raw bytearrays
+            for packet_data in raw_packets:
+                packet = InPacket(buffer=packet_data, receptor=receptor)
+                self.packet_stack.append(packet)
+        else:
+            print(f"Could not find any packets after processing buffer {buffer}")
+
+    def find_packets(self, decoded_buffer: bytearray) -> list:
+        packets = []
+        start = 0
+
+        while True:
+            end_index = decoded_buffer.find(b'\n', start)
+
+            if end_index == -1:
+                break
+
+            # Extract the packet including the newline character
+            packet = decoded_buffer[start:end_index + 1]
+            packets.append(packet)
+            start = end_index + 1
+
+            # Leftover data?
+            # if start < len(data):
+            #     packets.append(data[start:])
+
+        return packets
+
+    def xor_decrypt(self, packet_buffer: bytearray, xor_key: int) -> str:
+        # Decrypt the bytes with the xOrKey.
+        this_buffer = bytearray(packet_buffer)
+        for i in range(len(this_buffer)):
+            this_buffer[i] = this_buffer[i] ^ xor_key
+
+        return this_buffer
+
+
+class InPacket:
+    def __init__(
+        self,
+        buffer: bytearray,
+        receptor: object
+    ):
+        self.decoded_buffer = buffer
+
+        # TODO:  better UTF handling
+        self.blocks = self.decoded_buffer[2:].decode("utf-8", errors="ignore").split(" ")
+        self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
+        self.blocks = [block.rstrip() for block in self.blocks[2:]]
+        # This is a reference to the object whose listen() caught the packet
+        self.receptor = receptor
 
     def parse_packet_header(self, blocks: list) -> tuple:
         header = (blocks[0], blocks[1])
@@ -39,16 +87,6 @@ class InPacket:
         except ValueError as e:
             print(f"Cannot parse packet header: {e}")
             return header
-
-    def xor_decrypt(self, packet_buffer: bytearray, xor_key: int) -> str:
-        # Decrypt the bytes with the xOrKey.
-        this_buffer = bytearray(packet_buffer)
-        for i in range(len(this_buffer)):
-            this_buffer[i] = this_buffer[i] ^ xor_key
-
-        # Return the decrypted packet
-        # decoded_buffer = this_buffer.decode("utf-8")
-        return this_buffer
 
 
 class OutPacket:
