@@ -10,6 +10,7 @@ class ErrorCodes:
     SERVER_NAME_USED = 0x140
     SERVER_ERROR_OTHER = 0x150
 
+
 class UserRights:
     Blocked = 0
     Regular = 1
@@ -29,9 +30,8 @@ class Ports:
     UDP1 = 5350
     UDP2 = 5351
 
-# A user with DEV rights will see every type of server.
-# Admins and regular users will only see Entire/Adult types.
-# Everyone will see trainee type servers
+
+
 class ServerTypes:
     ENTIRE = 0
     ADULT = 1
