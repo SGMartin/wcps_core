@@ -13,6 +13,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wcps_core"]
+
+
 [project.urls]
 Homepage = "https://github.com/SGMartin/wcps_core"
 Issues = "https://github.com/SGMartin/wcps_core/issues"
