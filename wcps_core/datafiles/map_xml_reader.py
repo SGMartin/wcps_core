@@ -1,9 +1,37 @@
+"""Generate the game server's map tables from the client's Maps folder.
+
+Usage: python map_xml_reader.py <client Maps folder> <output dir>
+
+Reads MapList.xml and, for every listed map, its MapInfo.xml, ControlPointTemplate.dat and
+ObjectSpawnTemplate.dat. Writes maps.csv and map_vehicles.csv into <output dir>
+(e.g. wcps_game/wcps_game/client).
+"""
 import csv
 import json
 import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+
+
+def client_bool(value, default=False):
+    """Read a boolean the way the client does (FUN_00716060 in PF23).
+
+    A non-zero number, or text starting with T/t/Y/y, or "ON" is true; text starting with
+    0/F/f/N/n, or "OFF" is false; anything else gives the default. So the client reads the
+    "Ture" typo in some MapInfo.xml (e.g. Paroho) as true.
+    """
+    text = (value or "").strip()
+    try:
+        if int(text) != 0:
+            return True
+    except ValueError:
+        pass
+    if text[:1] in ("T", "t", "Y", "y") or text.upper().startswith("ON"):
+        return True
+    if text[:1] in ("0", "F", "f", "N", "n") or text.upper().startswith("OFF"):
+        return False
+    return default
 
 
 def parse_map_list(xml_string):
@@ -126,12 +154,9 @@ def parse_vehicles(vehicle_data_stream):
     return vehicles
 
 
-def parse_map_settings_to_csv(input_json, mapper):
+def parse_map_settings_to_csv(input_json, mapper, csv_file_path):
     # Load JSON data from the string (or from a file if needed)
     data = json.loads(input_json)
-
-    # Define the CSV file path
-    csv_file_path = "output/csv/maps.csv"
 
     # Define the CSV columns
     csv_columns = [
@@ -159,12 +184,12 @@ def parse_map_settings_to_csv(input_json, mapper):
         row = {
             "map_id": item["Identity"],
             "map_name": mapper.get(item["Identity"], "unknown"),
-            "cqc": item["Channel"]["Mission"],
-            "uo": item["Channel"]["Medium"],
-            "bg": item["Channel"]["Large"],
-            "explosive": item["GameMode"]["Explosive"],
-            "deathmatch": item["GameMode"]["DeathMatch"],
-            "conquest": item["GameMode"]["Conquest"],
+            "cqc": client_bool(item["Channel"]["Mission"]),
+            "uo": client_bool(item["Channel"]["Medium"]),
+            "bg": client_bool(item["Channel"]["Large"]),
+            "explosive": client_bool(item["GameMode"]["Explosive"]),
+            "deathmatch": client_bool(item["GameMode"]["DeathMatch"]),
+            "conquest": client_bool(item["GameMode"]["Conquest"]),
             "ffa": item["GameMode"]["FFA"],
             "premium": item["Restriction"],
             "active": True,
@@ -211,7 +236,7 @@ def parse_vehicles_to_csv(data, filename):
     print("Exported vehicles to map vehicle table")
 
 
-def main(input_directory):
+def main(input_directory, output_directory):
     with open(file=os.path.join(input_directory, "MapList.xml"), mode="r") as map_file:
         maps_xml_list = map_file.read()
 
@@ -271,30 +296,27 @@ def main(input_directory):
                         all_vehicles[int(map_data_json["Identity"])] = vehicles
 
                 # Append to map settings
+                # Seasonal maps share the ID of their base map (e.g. XMarien and Marien are both 12):
+                # name the ID after the first map listed, the base one.
                 map_id = map_data_json["Identity"]
-                id_name_mapper[map_id] = this_map.lower()
+                id_name_mapper.setdefault(map_id, this_map.lower())
                 all_map_settings.append(map_data_json)
 
-    map_settings_file = "output/json/map_settings.json"
-    map_list_file = "output/json/map_list.json"
-
-    # Save the JSON data to a file
-    with open(map_settings_file, "w") as outfile:
-        json.dump(all_map_settings, outfile, indent=4)
-
-    # Save the JSON data to a file
-    with open(map_list_file, "w") as outfile:
-        json.dump(json.loads(map_list_json), outfile, indent=4)
+    os.makedirs(output_directory, exist_ok=True)
 
     # Export to csv
-    parse_map_settings_to_csv(json.dumps(all_map_settings, indent=4), id_name_mapper)
+    parse_map_settings_to_csv(
+        json.dumps(all_map_settings, indent=4),
+        id_name_mapper,
+        os.path.join(output_directory, "maps.csv"),
+    )
 
     # Generate vehicle table
-    parse_vehicles_to_csv(all_vehicles, filename="output/csv/map_vehicles.csv")
+    parse_vehicles_to_csv(all_vehicles, filename=os.path.join(output_directory, "map_vehicles.csv"))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <path_to_file>")
-    else:
-        main(sys.argv[1])
+    if len(sys.argv) != 3:
+        print(__doc__)
+        sys.exit(2)
+    main(sys.argv[1], sys.argv[2])
