@@ -72,8 +72,10 @@ class InPacket:
         receptor: object
     ):
         self.decoded_buffer = buffer
-        # TODO:  better UTF handling
-        self.blocks = self.decoded_buffer.decode("utf-8", errors="ignore").split(" ")
+        # El cliente manda texto en la página de códigos de Windows (cp1252 en Europa, cp949 en Corea).
+        # latin-1 hace corresponder cada byte con un carácter: nunca falla y no pierde bytes (antes utf-8
+        # con errors="ignore" quitaba ñ, tildes...). El entramado del protocolo (0x0A, 0x20, 0x1D) es ASCII.
+        self.blocks = self.decoded_buffer.decode("latin-1").split(" ")
         self.ticks, self.packet_id = self.parse_packet_header(blocks=self.blocks)
         self.blocks = [block.rstrip() for block in self.blocks[2:]]
         # This is a reference to the object whose listen() caught the packet
@@ -124,7 +126,9 @@ class OutPacket:
         full_packet = " ".join(self.blocks)
         # End of packet character
         full_packet += chr(0xA)
-        full_packet = full_packet.encode("utf-8")
+        # Simétrico a InPacket: los bytes del cliente vuelven idénticos. Lo que no cabe en un byte
+        # (p. ej. texto Unicode > U+00FF) sale como "?" en vez de lanzar una excepción.
+        full_packet = full_packet.encode("latin-1", errors="replace")
 
         if encrypted:
             full_packet = self.xor_encrypt(packet=full_packet)
