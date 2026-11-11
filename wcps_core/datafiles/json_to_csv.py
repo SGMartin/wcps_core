@@ -155,17 +155,19 @@ def main():
         print(f"Error: The file {json_file_path} does not exist.")
         return
 
-    # Determine output file paths
-    base_dir = os.path.dirname(json_file_path)
+    # Load JSON data
+    with open(json_file_path, "r", encoding="utf-8") as file:
+        json_data = json.load(file)
+    generate_all(json_data, os.path.dirname(json_file_path))
+
+
+def generate_all(json_data, base_dir):
+    """Write every table that comes from items.bin into base_dir."""
     items_table_path = os.path.join(base_dir, "items.csv")
     item_shop_table_path = os.path.join(base_dir, "item_shop.csv")
     weapon_damage_table_path = os.path.join(base_dir, "weapon_damage.csv")
     e_weapons_table_path = os.path.join(base_dir, "vehicle_weapon_damage.csv")
     vehicle_table_path = os.path.join(base_dir, "vehicles.csv")
-
-    # Load JSON data
-    with open(json_file_path, "r", encoding="utf-8") as file:
-        json_data = json.load(file)
 
     # Generate the CSV tables
     generate_items_table(json_data, items_table_path)

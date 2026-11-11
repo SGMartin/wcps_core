@@ -1,5 +1,6 @@
-import re
+import argparse
 import json
+import re
 
 
 def parse_section(content, start_tag, end_tag):
@@ -29,8 +30,10 @@ def parse_block(block):
 
 
 def parse_item_data(file_path):
-    with open(file_path, "r", encoding="utf-8") as file:
-        content = file.read()
+    # The text is CP949 (Korean names), not UTF-8. Undecodable bytes only appear in KOREAN fields,
+    # which no table uses.
+    with open(file_path, "rb") as file:
+        content = file.read().decode("cp949", errors="replace")
 
     item_data = {
         "RESOURCE": [],
@@ -61,7 +64,14 @@ def save_json(data, file_path):
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
-# Example usage
-file_path = "output/decoded/items.bin.decoded"
-parsed_data = parse_item_data(file_path)
-save_json(parsed_data, "item_data.json")
+def main():
+    parser = argparse.ArgumentParser(description="Parse a decoded items.bin into JSON.")
+    parser.add_argument("items_file", help="decoded items.bin (plain text)")
+    parser.add_argument("json_file", nargs="?", default="item_data.json", help="output JSON")
+    args = parser.parse_args()
+    save_json(parse_item_data(args.items_file), args.json_file)
+    print(f"JSON saved to: {args.json_file}")
+
+
+if __name__ == "__main__":
+    main()
