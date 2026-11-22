@@ -21,7 +21,24 @@ ITEMS = (
     "\t\t\tREQ_LVL                     =\t1\n"
     "\t\t</BUY_INFO>\n\t\t<USE_INFO>\n"
     "\t\t\tAPPLY_TARGET                =\t-1\n"
-    "\t\t</USE_INFO>\n\t\t//-->\n\t[/WEAPON]\n[/ITEM_DATA]\n//-->\n"
+    "\t\t</USE_INFO>\n\t\t//-->\n\t[/WEAPON]\n"
+    "\t[EQUIPMENT]\n\t\t<!--\n\t\t<BASIC_INFO>\n"
+    "\t\t\tENGLISH                     =\tWIESEL\n"
+    "\t\t\tCODE                        =\tEF04\n"
+    "\t\t</BASIC_INFO>\n\t\t<ABILITY_INFO>\n"
+    "\t\t\tDEFENCE                     =\t3800\n"
+    "\t\t\tARMORTYPE                   =\t1\n"
+    "\t\t</ABILITY_INFO>\n\t\t<RIDING_INFO>\n"
+    "\t\t\tSEATSLOT                    =\t1\n"
+    "\t\t\t<CANNON>\n"
+    "\t\t\t\tCODE                        =\tFC01\n"
+    "\t\t\t\tSEAT_NUMBER                 =\t0\n"
+    "\t\t\t\tARMOR_TYPE                  =\t0\n"
+    "\t\t\t\tAMMONNUM                    =\t300\n"
+    "\t\t\t\tMAGAZINENUM                 =\t0\n"
+    "\t\t\t</CANNON>\n"
+    "\t\t</RIDING_INFO>\n\t\t//-->\n\t[/EQUIPMENT]\n"
+    "[/ITEM_DATA]\n//-->\n"
 ).encode("latin-1")
 
 
@@ -36,6 +53,12 @@ class TestGenerateTables(unittest.TestCase):
             self.assertEqual(rows[0]["cost"], "-1,-1,-1,13000,-1")
             for name in ("items", "weapon_damage", "vehicle_weapon_damage", "vehicles"):
                 self.assertTrue(os.path.exists(os.path.join(out, f"{name}.csv")))
+            with open(os.path.join(out, "vehicles.csv"), encoding="utf-8") as f:
+                vehicles = list(csv.DictReader(f))
+            self.assertEqual(vehicles[0]["code"], "EF04")
+            self.assertEqual(vehicles[0]["weapon_code"], "FC01")
+            # ARMORTYPE of the vehicle (ABILITY_INFO), not ARMOR_TYPE of the seat
+            self.assertEqual(vehicles[0]["armor"], "1")
 
     def test_from_decoded_text(self):
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
