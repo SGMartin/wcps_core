@@ -110,7 +110,7 @@ def generate_vehicle_table(json_data, output_csv_file):
             "weapon_code",
             "weapon_ammo",
             "weapon_magazine",
-            "armor_type",
+            "seat_weapon_armor_type",
             "armor",
             ]
             )
@@ -125,7 +125,7 @@ def generate_vehicle_table(json_data, output_csv_file):
                 vehicle_health = ability_info.get("DEFENCE", 0)
                 # The vehicle's armor (0 light, 1 medium, 2 heavy): picks which of the three
                 # TARGET_INFO numbers of the attacking weapon applies. Not the same as the
-                # seat's ARMOR_TYPE below, which nothing in the client reads.
+                # seat weapon's ARMOR_TYPE below.
                 armor = ability_info.get("ARMORTYPE", 0)
 
                 seats = vehicle.get("SEATS", [])
@@ -135,7 +135,9 @@ def generate_vehicle_table(json_data, output_csv_file):
                     weapon_code = seat.get("CODE", "")
                     weapon_ammo = seat.get("AMMONNUM", 0)
                     weapon_magazine = seat.get("MAGAZINENUM", 0)
-                    armor_type = seat.get("ARMOR_TYPE", 0)
+                    # ARMOR_TYPE of the mounted weapon: -1 seat without weapon, 0 machine
+                    # guns, 1 cannons and missiles. Nothing in the client reads it.
+                    seat_weapon_armor_type = seat.get("ARMOR_TYPE", 0)
 
                     writer.writerow([
                         name,
@@ -145,7 +147,7 @@ def generate_vehicle_table(json_data, output_csv_file):
                         weapon_code,
                         weapon_ammo,
                         weapon_magazine,
-                        armor_type,
+                        seat_weapon_armor_type,
                         armor]
                     )
 

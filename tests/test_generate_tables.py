@@ -59,6 +59,7 @@ class TestGenerateTables(unittest.TestCase):
             self.assertEqual(vehicles[0]["weapon_code"], "FC01")
             # ARMORTYPE of the vehicle (ABILITY_INFO), not ARMOR_TYPE of the seat
             self.assertEqual(vehicles[0]["armor"], "1")
+            self.assertEqual(vehicles[0]["seat_weapon_armor_type"], "0")
 
     def test_from_decoded_text(self):
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
